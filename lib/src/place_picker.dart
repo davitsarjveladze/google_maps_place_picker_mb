@@ -15,6 +15,8 @@ import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
 
 import 'package:uuid/uuid.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui';
 
 typedef IntroModalWidgetBuilder = Widget Function(
   BuildContext context,
@@ -303,11 +305,62 @@ class _PlacePickerState extends State<PlacePicker> {
                       automaticallyImplyLeading: false,
                       iconTheme: Theme.of(context).iconTheme,
                       elevation: 0,
-                      backgroundColor: Colors.transparent,
+                      flexibleSpace: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            color: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black.withOpacity(0.2)
+                              : Colors.white.withOpacity(0.2),
                       titleSpacing: 0.0,
                       title: _buildSearchBar(context),
                     ),
-                    body: _buildMapWithLocation(),
+                    body: Stack(
+                      children: [
+                        _buildMapWithLocation(),
+                        if (provider!.placeSearchingState ==
+                            SearchingState.Searching)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black26,
+                              child: Center(
+                                child: Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).cardColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        widget.searchingText ?? 'Searching...',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   _buildIntroModal(context),
                 ]),
@@ -344,36 +397,37 @@ class _PlacePickerState extends State<PlacePicker> {
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        SizedBox(width: 15),
-        provider!.placeSearchingState == SearchingState.Idle &&
-                (widget.automaticallyImplyAppBarLeading ||
-                    widget.onTapBack != null)
-            ? IconButton(
-                onPressed: () {
-                  if (!showIntroModal ||
-                      widget.introModalWidgetBuilder == null) {
-                    provider?.debounceTimer?.cancel();
-                    if (widget.onTapBack != null) {
-                      widget.onTapBack!();
-                      return;
-                    }
-                    Navigator.maybePop(context);
+    return Container(
+      margin: EdgeInsets.only(top: 8, bottom: 8),
+      child: Row(
+        children: <Widget>[
+          if (provider!.placeSearchingState == SearchingState.Idle &&
+              (widget.automaticallyImplyAppBarLeading ||
+                  widget.onTapBack != null))
+            IconButton(
+              onPressed: () {
+                if (!showIntroModal || widget.introModalWidgetBuilder == null) {
+                  provider?.debounceTimer?.cancel();
+                  if (widget.onTapBack != null) {
+                    widget.onTapBack!();
+                    return;
                   }
-                },
-                icon: Icon(
-                  Icons.arrow_back_ios,
-                ),
-                color: Colors.black.withAlpha(128),
-                padding: EdgeInsets.zero)
-            : Container(),
-        Expanded(
-          child: AutoCompleteSearch(
+                  Navigator.maybePop(context);
+                }
+              },
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.black54,
+              ),
+            ),
+          Expanded(
+            child: AutoCompleteSearch(
               appBarKey: appBarKey,
               searchBarController: searchBarController,
               sessionToken: provider!.sessionToken,
-              hintText: widget.hintText,
+              hintText: widget.hintText ?? 'Search location',
               searchingText: widget.searchingText,
               debounceMilliseconds: widget.autoCompleteDebounceInMilliseconds,
               onPicked: (prediction) {
@@ -396,10 +450,11 @@ class _PlacePickerState extends State<PlacePicker> {
               initialSearchString: widget.initialSearchString,
               searchForInitialValue: widget.searchForInitialValue,
               autocompleteOnTrailingWhitespace:
-                  widget.autocompleteOnTrailingWhitespace),
-        ),
-        SizedBox(width: 5),
-      ],
+                  widget.autocompleteOnTrailingWhitespace,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

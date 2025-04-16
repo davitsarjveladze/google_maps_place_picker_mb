@@ -102,22 +102,33 @@ class AutoCompleteSearchState extends State<AutoCompleteSearch> {
     return !widget.hidden
         ? ChangeNotifierProvider.value(
             value: provider,
-            child: RoundedFrame(
+            child: Container(
               height: widget.height,
-              padding: const EdgeInsets.only(right: 10),
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black54
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              elevation: 0,
-              child: Row(
-                children: <Widget>[
-                  SizedBox(width: 10),
-                  Icon(Icons.search),
-                  SizedBox(width: 10),
-                  Expanded(child: _buildSearchTextField()),
-                  _buildTextClearIcon(),
-                ],
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: Material(
+                elevation: 4,
+                shadowColor: Colors.black12,
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[800]
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.search,
+                        color: Color.fromRGBO(0, 183, 240, 1),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(child: _buildSearchTextField()),
+                      _buildTextClearIcon(),
+                    ],
+                  ),
+                ),
               ),
             ),
           )
@@ -128,8 +139,22 @@ class AutoCompleteSearchState extends State<AutoCompleteSearch> {
     return TextField(
       controller: controller,
       focusNode: focus,
+      style: TextStyle(
+        fontSize: 16,
+        height: 1.4,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black87,
+      ),
       decoration: InputDecoration(
         hintText: widget.hintText,
+        hintStyle: TextStyle(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white60
+              : Colors.black38,
+          fontSize: 16,
+          height: 1.4,
+        ),
         border: InputBorder.none,
         errorBorder: InputBorder.none,
         enabledBorder: InputBorder.none,
@@ -147,14 +172,20 @@ class AutoCompleteSearchState extends State<AutoCompleteSearch> {
         selector: (_, provider) => provider.searchTerm,
         builder: (_, data, __) {
           if (data.length > 0) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: GestureDetector(
-                child: Icon(
-                  Icons.clear,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
+            return Material(
+              type: MaterialType.circle,
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(
+                    Icons.close,
+                    size: 20,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
                 ),
                 onTap: () {
                   clearText();
@@ -162,7 +193,7 @@ class AutoCompleteSearchState extends State<AutoCompleteSearch> {
               ),
             );
           } else {
-            return SizedBox(width: 10);
+            return SizedBox(width: 8);
           }
         });
   }
